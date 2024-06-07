@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Search App</title>
+  <!-- CSS -->
+  <style>
+
+    #userlist {
+      list-style: none;
+      padding: 0;
+    }
+
+    #userlist li {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+      margin-top: 10px;
+    }
+    #userlist li img {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <input type="text" id="searchinput" placeholder="Search users...">
+  <li id="userlist"></li>
+
+  <script>
+    const searchInput = document.getElementById('searchinput');
+    const userList = document.getElementById('userlist');
+
+    window.onload = function() {
+      fetchUsers('');
+    };
+
+
+    // searchInput.oninput = function() {
+    // fetchUsers(searchInput.value.toLowerCase());
+    // };
+
+    // Debounce logic
+    let debounceSearch;
+    searchInput.oninput = function() {
+      clearTimeout(debounceSearch);
+      debounceSearch = setTimeout(() => {
+        fetchUsers(searchInput.value.toLowerCase());
+      },1200);
+    };
+
+
+    // Function to Fetch user and thumbnail from API, followed by filter and sort logic 
+    function fetchUsers(query) {
+      fetch(`https://api.github.com/users?query=${query}`)
+        .then(response => response.json())
+        .then(data => {
+          const filteredUsers = data.map(item => ({
+            login: item.login,
+            avatar_url: item.avatar_url
+          }))
+          .filter(user => user.login.toLowerCase().includes(query))
+          filteredUsers.sort((a, b) => {
+            const first = a.login.toLowerCase().indexOf(query);
+            const second = b.login.toLowerCase().indexOf(query);
+            return first - second;
+          });
+          displayUsers(filteredUsers);
+        })
+        .catch(error => console.error('Error', error));
+    }
+
+    //  Function to display all the users mapped to Login and avatar_url
+    function displayUsers(users) {
+      userList.innerHTML = users.map(user =>
+        `<li>
+          <img src="${user.avatar_url}" alt="${user.login}">
+          <span>${user.login}</span>
+        </li>`).join('');
+    }
+  </script>
+</body>
+</html>
